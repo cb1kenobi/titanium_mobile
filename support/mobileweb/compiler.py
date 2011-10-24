@@ -4,7 +4,7 @@
 # Project Compiler
 #
 
-import os, sys, re, shutil, time, base64, sgmllib, codecs, xml, json
+import os, sys, re, shutil, time, base64, sgmllib, codecs, xml, json, mako.template
 
 template_dir = os.path.abspath(os.path.dirname(sys._getframe(0).f_code.co_filename))
 from tiapp import *
@@ -176,21 +176,21 @@ class Compiler(object):
 		titanium_js += ";\nTi._5.setLoadedScripts(" + json.dumps(self.ti_includes) + ");"
 
 		titanium_js = HEADER + titanium_js + FOOTER
-
-		titanium_js = titanium_js.replace('__PROJECT_NAME__',self.project_name)
-		titanium_js = titanium_js.replace('__PROJECT_ID__',self.appid)
-		titanium_js = titanium_js.replace('__DEPLOYTYPE__',deploytype)
-		titanium_js = titanium_js.replace('__APP_ID__',self.appid)
-		titanium_js = titanium_js.replace('__APP_ANALYTICS__',ti.properties['analytics'])
-		titanium_js = titanium_js.replace('__APP_PUBLISHER__',ti.properties['publisher'])
-		titanium_js = titanium_js.replace('__APP_URL__',ti.properties['url'])
-		titanium_js = titanium_js.replace('__APP_NAME__',ti.properties['name'])
-		titanium_js = titanium_js.replace('__APP_VERSION__',ti.properties['version'])
-		titanium_js = titanium_js.replace('__APP_DESCRIPTION__',ti.properties['description'])
-		titanium_js = titanium_js.replace('__APP_COPYRIGHT__',ti.properties['copyright'])
-		titanium_js = titanium_js.replace('__APP_GUID__',ti.properties['guid'])
+		'''titanium_js = mako.template.Template(titanium_js).render(
+				ti_version=sdk_version,
+				project_name=self.project_name,
+				project_id=self.appid,
+				deploy_type=deploytype,
+				app_id=self.appid,
+				app_analytics=ti.properties['analytics'],
+				app_publisher=ti.properties['publisher'],
+				app_url=ti.properties['url'],
+				app_name=ti.properties['name'],
+				app_version=ti.properties['version'],
+				app_description=ti.properties['description'],
+				app_copyright=ti.properties['copyright'],
+				app_guid=ti.properties['guid'])'''
 		
-
 		ti_dir = os.path.join(self.build_dir,'titanium')
 		try:
 			os.makedirs(ti_dir)
@@ -222,22 +222,23 @@ class Compiler(object):
 			status_bar_style = 'default'
 
 		main_template = codecs.open(os.path.join(src_dir,'index.html'), encoding='utf-8').read().encode("utf-8")
-		main_template = main_template.replace('__TI_VERSION__',sdk_version)
-		main_template = main_template.replace('__TI_STATUSBAR_STYLE__',status_bar_style)
-		main_template = main_template.replace('__TI_GENERATOR__',"Appcelerator Titanium Mobile "+sdk_version)
-		main_template = main_template.replace('__PROJECT_NAME__',self.project_name)
-		main_template = main_template.replace('__PROJECT_ID__',self.appid)
-		main_template = main_template.replace('__DEPLOYTYPE__',deploytype)
-		main_template = main_template.replace('__APP_ID__',self.appid)
-		main_template = main_template.replace('__APP_ANALYTICS__',ti.properties['analytics'])
-		main_template = main_template.replace('__APP_PUBLISHER__',ti.properties['publisher'])
-		main_template = main_template.replace('__APP_URL__',ti.properties['url'])
-		main_template = main_template.replace('__APP_NAME__',ti.properties['name'])
-		main_template = main_template.replace('__APP_VERSION__',ti.properties['version'])
-		main_template = main_template.replace('__APP_DESCRIPTION__',ti.properties['description'])
-		main_template = main_template.replace('__APP_COPYRIGHT__',ti.properties['copyright'])
-		main_template = main_template.replace('__APP_GUID__',ti.properties['guid'])
-		main_template = main_template.replace('__TI_JS__',titanium_js)
+		main_template = mako.template.Template(main_template).render(
+				ti_version=sdk_version,
+				ti_statusbar_style=status_bar_style,
+				ti_generator="Appcelerator Titanium Mobile "+sdk_version,
+				project_name=self.project_name,
+				project_id=self.appid,
+				deploy_type=deploytype,
+				app_id=self.appid,
+				app_analytics=ti.properties['analytics'],
+				app_publisher=ti.properties['publisher'],
+				app_url=ti.properties['url'],
+				app_name=ti.properties['name'],
+				app_version=ti.properties['version'],
+				app_description=ti.properties['description'],
+				app_copyright=ti.properties['copyright'],
+				app_guid=ti.properties['guid'],
+				ti_js=titanium_js)
 
 		index_file = os.path.join(self.build_dir,'index.html')
 		o = codecs.open(index_file,'w',encoding='utf-8')

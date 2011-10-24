@@ -2,19 +2,19 @@
 	// Interfaces
 	Ti._5.EventDriven(api);
 
-	api.id = "__APP_ID__";
-	api.name = "__APP_NAME__";
-	api.version = "__APP_VERSION__";
-	api.publisher = "__APP_PUBLISHER__";
-	api.description = "__APP_DESCRIPTION__";
-	api.copyright = "__APP_COPYRIGHT__";
-	api.url = "__APP_URL__";
-	api.guid = "__APP_GUID__";
+	api.id = "${app_id}";
+	api.name = "${app_name}";
+	api.version = "${app_version}";
+	api.publisher = "${app_publisher}";
+	api.description = "${app_description}";
+	api.copyright = "${app_copyright}";
+	api.url = "${app_url}";
+	api.guid = "${app_guid}";
 	api.idleTimerDisabled = true;
 	api.proximityDetection = false;
 	api.proximityState = 0;
 		
-	var analytics = "__APP_ANALYTICS__";
+	var analytics = "${app_analytics}";
 
 	// Methods
 	api.getArguments = function(){
