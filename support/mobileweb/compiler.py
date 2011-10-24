@@ -176,7 +176,7 @@ class Compiler(object):
 		titanium_js += ";\nTi._5.setLoadedScripts(" + json.dumps(self.ti_includes) + ");"
 
 		titanium_js = HEADER + titanium_js + FOOTER
-		'''titanium_js = mako.template.Template(titanium_js).render(
+		titanium_js = mako.template.Template(titanium_js).render(
 				ti_version=sdk_version,
 				project_name=self.project_name,
 				project_id=self.appid,
@@ -189,7 +189,7 @@ class Compiler(object):
 				app_version=ti.properties['version'],
 				app_description=ti.properties['description'],
 				app_copyright=ti.properties['copyright'],
-				app_guid=ti.properties['guid'])'''
+				app_guid=ti.properties['guid'])
 		
 		ti_dir = os.path.join(self.build_dir,'titanium')
 		try:
