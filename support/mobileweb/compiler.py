@@ -98,39 +98,25 @@ class Compiler(object):
 					compile_js(from_,to_)
 				else:
 					shutil.copy(from_,to_)
-
-		titanium_js = "(%s\n\
+		titanium_js = "<%!\n\
+	def jsQuoteEscapeFilter(str):\n\
+		return str.replace(\"\\\"\",\"\\\\\\\"\")\n\
+%>\n" + "(%s\n\
 )(window, {\n\
-	projectName: '%s',\n\
-	projectId: '%s',\n\
-	deployType: '%s',\n\
-	appId: '%s',\n\
-	appAnalytics: '%s',\n\
-	appPublisher: '%s',\n\
-	appUrl: '%s',\n\
-	appName: '%s',\n\
-	appVersion: '%s',\n\
-	appDescription: '%s',\n\
-	appCopyright: '%s',\n\
-	appGuid: '%s',\n\
-	tiVersion: '%s'\n\
-});\n".encode('utf-8') % (
-			self.load_api(os.path.join(src_dir,"titanium.js")),
-			self.project_name,
-			self.appid,
-			deploytype,
-			self.appid,
-			ti.properties['analytics'],
-			ti.properties['publisher'],
-			ti.properties['url'],
-			ti.properties['name'],
-			ti.properties['version'],
-			ti.properties['description'],
-			ti.properties['copyright'],
-			ti.properties['guid'],
-			sdk_version
-		)
-
+	projectName: '${project_name | jsQuoteEscapeFilter}',\n\
+	projectId: '${project_id | jsQuoteEscapeFilter}',\n\
+	deployType: '${deploy_type | jsQuoteEscapeFilter}',\n\
+	appId: '${app_name | jsQuoteEscapeFilter}',\n\
+	appAnalytics: '${app_analytics | jsQuoteEscapeFilter}',\n\
+	appPublisher: '${app_publisher | jsQuoteEscapeFilter}',\n\
+	appUrl: '${app_url | jsQuoteEscapeFilter}',\n\
+	appName: '${app_name | jsQuoteEscapeFilter}',\n\
+	appVersion: '${app_version | jsQuoteEscapeFilter}',\n\
+	appDescription: '${app_description | jsQuoteEscapeFilter}',\n\
+	appCopyright: '${app_copyright | jsQuoteEscapeFilter}',\n\
+	appGuid: '${app_guid | jsQuoteEscapeFilter}',\n\
+	tiVersion: '${ti_version | jsQuoteEscapeFilter}'\n\
+});\n".encode('utf-8') % (self.load_api(os.path.join(src_dir,"titanium.js")))
 		if deploytype == 'all':
 			print "Deploy type is 'all' - all modules will be included into dist"
 			for root, dirs, files in os.walk(src_dir):
