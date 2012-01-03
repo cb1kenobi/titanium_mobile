@@ -12,6 +12,8 @@ Ti._5.createClass("Ti.Network.HTTPClient", function(args){
 		_readyState = UNSENT, // unsent
 		timeoutTimer;
 
+	Ti._5.EventDriven(obj);
+
 	function fireStateChange() {
 		is(obj.onreadystatechange, "Function") && obj.onreadystatechange.call(obj);
 	}
@@ -84,7 +86,7 @@ Ti._5.createClass("Ti.Network.HTTPClient", function(args){
 		validatesSecureCertificate: false
 	});
 
-	require.mix(args, obj);
+	require.mix(obj, args);
 
 	// Methods
 	obj.abort = function() {
