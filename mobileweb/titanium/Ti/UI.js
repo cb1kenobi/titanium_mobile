@@ -16,7 +16,8 @@ define(
 			Ti.UI._recalculateLayout();
 			hidingAddressBar = 0;
 		},
-		unitize = dom.unitize;
+		unitize = dom.unitize,
+		layoutListeners = {};
 
 	on(body, "touchmove", function(e) {
 		e.preventDefault();
@@ -93,8 +94,38 @@ define(
 		});
 		hideAddressBar();
 	});
-	
+
 	function updateOrientation() {
+		var name, layout,
+			w = window.innerWidth,
+			h = window.innerHeight,
+			r = w / h,
+			size = {
+				w: w,
+				h: h
+			},
+			state;
+
+		for (name in layoutListeners) {
+			layout = layoutListeners[name];
+			state =	(!lang.isDef(layout.width)			|| w == layout.width) &&
+					(!lang.isDef(layout.minWidth)		|| w >= layout.minWidth) &&
+					(!lang.isDef(layout.maxWidth)		|| w <= layout.maxWidth) &&
+					(!lang.isDef(layout.height)			|| w == layout.height) &&
+					(!lang.isDef(layout.minHeight)		|| w >= layout.minHeight) &&
+					(!lang.isDef(layout.maxHeight)		|| w <= layout.maxHeight) &&
+					(!lang.isDef(layout.aspectRatio)	|| r == layout.aspectRatio) &&
+					(!lang.isDef(layout.minAspectRatio)	|| r >= layout.minAspectRatio) &&
+					(!lang.isDef(layout.maxAspectRatio)	|| r <= layout.maxAspectRatio);
+
+			if (state && state !== layout.state) {
+				require.is(layout.callback, "Function") && layout.callback(size);
+				name.indexOf("_Ti_") && Ti.UI.fireEvent(name, size);
+			}
+
+			layout.state = state;
+		}
+
 		Ti.UI._recalculateLayout();
 		require("Ti/Gesture")._updateOrientation();
 	}
@@ -102,6 +133,21 @@ define(
 	on(global, "orientationchange", updateOrientation);
 
 	return lang.setObject("Ti.UI", Evented, creators, {
+
+		addLayoutListener: function(name, params, callback) {
+			if (!require.is(name, "String")) {
+				callback = params;
+				params = name;
+				name = "_Ti_" + Math.round(Math.random()*1e9);
+			}
+			params.state = false;
+			(params = params || {}).callback = callback;
+			layoutListeners[name] = params;
+		},
+
+		removeLayoutListener: function(name) {
+			delete layoutListeners[name];
+		},
 
 		_addWindow: function(win, set) {
 			this._container.add(win.modal ? win._modalParentContainer : win);
