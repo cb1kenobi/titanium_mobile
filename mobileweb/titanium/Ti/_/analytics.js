@@ -20,7 +20,7 @@ define(["Ti/_", "Ti/_/dom", "Ti/_/lang", "Ti/App", "Ti/Platform"], function(_, d
 
 	function setStorage(data) {
 		localStorage.setItem(analyticsStorageName, JSON.stringify(data));
-	}	
+	}
 
 	function onSuccess(response) {
 		if (is(response.data, "Object") && response.data.success) {
