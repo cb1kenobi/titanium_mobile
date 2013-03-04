@@ -85,7 +85,10 @@ exports.config = function (logger, config, cli) {
 				lowerCasedDevNames = iosEnv.certs.devNames.map(function (s) { return s.toLowerCase(); }),
 				lowerCasedDistNames = iosEnv.certs.distNames.map(function (s) { return s.toLowerCase(); }),
 				humanize = require('humanize'),
-				libTiCoreSize = humanize.filesize(fs.lstatSync(afs.resolvePath(__dirname, '..', '..', 'libTiCore.a')).size, 1024, 1).toUpperCase();
+				libTiCoreSize = humanize.filesize(fs.lstatSync(afs.resolvePath(__dirname, '..', '..', 'libTiCore.a')).size, 1024, 1).toUpperCase(),
+				deviceNames = ['iTunes'].concat(iosEnv.devices.map(function (d) { return d.name; })),
+				lowerCasedDeviceNames = deviceNames.map(function (s) { return s.toLowerCase(); }),
+				lowerCasedDeviceIds = iosEnv.devices.map(function (d) { return d.id.toLowerCase(); });
 			
 			// attempt to resolve a default ios developer cert name (used for device builds)
 			if (process.env.CODE_SIGN_IDENTITY) {
@@ -201,6 +204,31 @@ exports.config = function (logger, config, cli) {
 									throw new appc.exception(
 										name ? __('Unable to find an iOS Developer Certificate for "%s"', name) : __('Select an iOS Developer Certificate:'),
 										output.map(function (s, i) { return i ? s.cyan : s; })
+									);
+								}
+								return true;
+							}
+						}
+					},
+					'device': {
+						abbr: 'E',
+						default: 'iTunes',
+						desc: __('the iOS device to install the app; only used when target is %s', 'device'.cyan),
+						hint: 'name',
+						values: deviceNames,
+						skipValueCheck: true,
+						prompt: {
+							label: __('Device to install the app to (device must be connected)'),
+							error: __('Invalid device name'),
+							validator: function (name) {
+								name && (name = name.trim());
+								var lname = name.toLowerCase();
+								if (!name || (lowerCasedDeviceNames.indexOf(lname) == -1 && lowerCasedDeviceIds.indexOf(lname) == -1)) {
+									var names = [__('Available devices:')];
+									names = names.concat(deviceNames);
+									throw new appc.exception(
+										name ? __('Unable to find a connected iOS device named "%s"', name) : __('Select a connected iOS device:'),
+										names.map(function (s, i) { return i ? '    ' + s.cyan : s; })
 									);
 								}
 								return true;
@@ -323,6 +351,7 @@ exports.config = function (logger, config, cli) {
 							switch (value) {
 								case 'device':
 									conf.options['developer-name'].required = true;
+									conf.options['device'].required = true;
 									conf.options['pp-uuid'].required = true;
 									
 									if (!iosEnv.certs.devNames.length) {
@@ -555,6 +584,59 @@ exports.validate = function (logger, config, cli) {
 				process.exit(1);
 			} else {
 				cli.argv['developer-name'] = iosEnv.certs.devNames[p];
+			}
+			
+			// validate the device
+			var deviceNames = ['iTunes'].concat(iosEnv.devices.map(function (d) {
+					return d.name;
+				})),
+				lname = cli.argv.device.toLowerCase(),
+				lowerCasedDeviceNames = deviceNames.map(function (s) { return s.toLowerCase(); }),
+				p = lowerCasedDeviceNames.indexOf(lname),
+				dev = {
+					id: null,
+					name: ''
+				};
+			
+			cli.argv.devices = [];
+			
+			if (p != -1) {
+				// found device by name
+				dev.name = deviceNames[p];
+				if (dev.name != 'iTunes') {
+					for (var i = 0; i < iosEnv.devices.length; i++) {
+						if (iosEnv.devices[i].name == dev.name) {
+							dev = iosEnv.devices[i];
+							break;
+						}
+					}
+				}
+				cli.argv.devices.push(dev);
+			} else {
+				// checking for device by id(s)
+				var ids = lname.split(','),
+					i, j;
+				
+				for (i = 0; i < ids.length; i++) {
+					for (j = 0; j < iosEnv.devices.length; j++) {
+						if (iosEnv.devices[j].id.toLowerCase() == ids[i]) {
+							cli.argv.devices.push(iosEnv.devices[j]);
+							break;
+						}
+					}
+				}
+				
+				if (cli.argv.devices.length != ids.length) {
+					// couldn't find the device
+					logger.error(__('Unable to find a connected iOS device named "%s"', cli.argv.device) + '\n');
+					logger.log(__('Available devices:'));
+					deviceNames.forEach(function (name) {
+						logger.log('    ' + name.cyan);
+					});
+					logger.log();
+					appc.string.suggest(cli.argv.device, deviceNames, logger.log);
+					process.exit(1);
+				}
 			}
 		} else {
 			// validate distribution cert
@@ -842,6 +924,7 @@ function build(logger, config, cli, finished) {
 	this.forceCopyAll = !!cli.argv['force-copy-all'];
 	
 	this.forceRebuild = false;
+	this.devices = cli.argv.devices;
 	
 	// the ios sdk version is not in the selected xcode version, need to find the version that does have it
 	Object.keys(iosEnv.xcode).forEach(function (sdk) {
@@ -854,10 +937,10 @@ function build(logger, config, cli, finished) {
 	this.logger.debug(__('Titanium iOS SDK directory: %s', this.titaniumIosSdkPath.cyan));
 	this.logger.info(__('Building for target: %s', this.target.cyan));
 	this.logger.info(__('Building using iOS SDK: %s', version.format(this.iosSdkVersion, 2).cyan));
+	this.logger.info(__('Building for device family: %s', this.deviceFamily.cyan));
 	if (this.target == 'simulator') {
 		this.logger.info(__('Building for iOS %s Simulator: %s', simTypes[this.iosSimType], this.iosSimVersion.cyan));
 	}
-	this.logger.info(__('Building for device family: %s', this.deviceFamily.cyan));
 	this.logger.debug(__('Setting Xcode target to %s', this.xcodeTarget.cyan));
 	this.logger.debug(__('Setting Xcode build OS to %s', this.xcodeTargetOS.cyan));
 	this.logger.debug(__('Xcode installation: %s', this.xcodeEnv.path.cyan));

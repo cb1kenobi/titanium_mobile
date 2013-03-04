@@ -101,7 +101,7 @@ exports.init = function (logger, config, cli) {
 				cmd = cmd.join(' ');
 
 				logger.info(__('Launching application in iOS Simulator'));
-				logger.trace(__('Simulator environment: %s', ('DYLD_FRAMEWORK_PATH=' + simEnv).cyan));
+				logger.debug(__('Simulator environment: %s', ('DYLD_FRAMEWORK_PATH=' + simEnv).cyan));
 				logger.debug(__('Simulator command: %s', cmd.cyan));
 
 				simProcess = spawn('/bin/sh', ['-c', cmd], {
