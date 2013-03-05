@@ -892,7 +892,25 @@ function build(logger, config, cli, finished) {
 	this.assetsDir = path.join(this.buildDir, 'assets');
 	this.tiapp = cli.tiapp;
 	this.target = cli.argv.target;
+	
 	this.provisioningProfileUUID = cli.argv['pp-uuid'];
+	this.provisioningProfile = (function (uuid) {
+		var i = 0,
+			j,
+			keys = Object.keys(iosEnv.provisioningProfiles),
+			profiles;
+		
+		for (; i < keys.length; i++) {
+			profiles = iosEnv.provisioningProfiles[keys[i]];
+			for (j = 0; j < profiles.length; j++) {
+				if (profiles[j].uuid == uuid) {
+					return profiles[j];
+				}
+			}
+		}
+		
+		return null;
+	}(this.provisioningProfileUUID));
 	
 	this.moduleSearchPaths = [ this.projectDir, afs.resolvePath(this.titaniumIosSdkPath, '..', '..', '..', '..') ];
 	if (config.paths && Array.isArray(config.paths.modules)) {

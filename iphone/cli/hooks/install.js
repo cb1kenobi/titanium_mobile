@@ -66,12 +66,24 @@ exports.init = function (logger, config, cli) {
 						return function (next) {
 							logger.info(__('Installing application to %s device %s', device.deviceClass, device.name.cyan));
 							appc.ios.install(device.id, ipa, logger, function (err) {
-								next(err);
+								var details;
+								if (err) {
+									details = [err];
+									if (err == 'ApplicationVerificationFailed') {
+										details.push(
+											__('Are you sure the device "%s" has the provisioning profile installed?', device.name),
+											build.provisioningProfile
+												? '    ' + build.provisioningProfile.uuid + '  ' + build.provisioningProfile.appId + ' (' + build.provisioningProfile.name + ')'
+												: '    ' + build.provisioningProfileUUID
+										);
+									}
+								}
+								next(details);
 							});
 						};
 					}), function (err) {
 						if (err) {
-							finished(new appc.exception(__('Failed to install app to device'), Array.isArray(err) ? err : [err]));
+							finished(new appc.exception(__('Failed to install app to device: ' + err.shift()), err));
 						} else {
 							finished();
 						}
