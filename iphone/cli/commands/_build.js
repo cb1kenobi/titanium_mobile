@@ -404,11 +404,6 @@ exports.validate = function (logger, config, cli) {
 	var sdks = {},
 		sims = {};
 	
-	// if we're running from Xcode, we want to use the PROJECT_DIR environment variable
-	if (process.env.PROJECT_DIR) {
-		cli.argv['project-dir'] = path.dirname(process.env.PROJECT_DIR);
-	}
-	
 	ti.validateProjectDir(logger, cli, cli.argv, 'project-dir');
 	
 	var resourcesDir = path.join(cli.argv['project-dir'], 'Resources');
@@ -1435,7 +1430,7 @@ build.prototype = {
 			'Pre-Compile',
 			'if [ \\"x$TITANIUM_CLI_XCODEBUILD\\" == \\"x\\" ]; then NO_COLORS=\\"--no-colors\\"; else NO_COLORS=\\"\\"; fi\\n' +
 			(process.execPath || 'node') + ' \\"' + this.cli.argv.$0.replace(/^(.+\/)*node /, '') + '\\" build --platform ' +
-				this.platformName + ' --sdk ' + this.titaniumSdkVersion + ' --no-prompt --no-banner $NO_COLORS --xcode\\nexit $?'
+				this.platformName + ' --sdk ' + this.titaniumSdkVersion + ' --project-dir \\"' + this.projectDir + '\\" --no-prompt --no-banner $NO_COLORS --xcode\\nexit $?'
 		);
 		proj = injectCompileShellScript(
 			proj,
