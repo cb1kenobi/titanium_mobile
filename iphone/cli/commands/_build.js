@@ -86,9 +86,9 @@ exports.config = function (logger, config, cli) {
 				lowerCasedDistNames = iosEnv.certs.distNames.map(function (s) { return s.toLowerCase(); }),
 				humanize = require('humanize'),
 				libTiCoreSize = humanize.filesize(fs.lstatSync(afs.resolvePath(__dirname, '..', '..', 'libTiCore.a')).size, 1024, 1).toUpperCase(),
-				deviceNames = ['iTunes'].concat(iosEnv.devices.map(function (d) { return d.name; })),
+				deviceNames = ['iTunes'].concat(iosEnv.iOSDevices.map(function (d) { return d.name; })),
 				lowerCasedDeviceNames = deviceNames.map(function (s) { return s.toLowerCase(); }),
-				lowerCasedDeviceIds = iosEnv.devices.map(function (d) { return d.id.toLowerCase(); });
+				lowerCasedDeviceIds = iosEnv.iOSDevices.map(function (d) { return d.id.toLowerCase(); });
 			
 			// attempt to resolve a default ios developer cert name (used for device builds)
 			if (process.env.CODE_SIGN_IDENTITY) {
@@ -582,7 +582,7 @@ exports.validate = function (logger, config, cli) {
 			}
 			
 			// validate the device
-			var deviceNames = ['iTunes'].concat(iosEnv.devices.map(function (d) {
+			var deviceNames = ['iTunes'].concat(iosEnv.iOSDevices.map(function (d) {
 					return d.name;
 				})),
 				lname = cli.argv.device.toLowerCase(),
@@ -599,9 +599,9 @@ exports.validate = function (logger, config, cli) {
 				// found device by name
 				dev.name = deviceNames[p];
 				if (dev.name != 'iTunes') {
-					for (var i = 0; i < iosEnv.devices.length; i++) {
-						if (iosEnv.devices[i].name == dev.name) {
-							dev = iosEnv.devices[i];
+					for (var i = 0; i < iosEnv.iOSDevices.length; i++) {
+						if (iosEnv.iOSDevices[i].name == dev.name) {
+							dev = iosEnv.iOSDevices[i];
 							break;
 						}
 					}
@@ -613,9 +613,9 @@ exports.validate = function (logger, config, cli) {
 					i, j;
 				
 				for (i = 0; i < ids.length; i++) {
-					for (j = 0; j < iosEnv.devices.length; j++) {
-						if (iosEnv.devices[j].id.toLowerCase() == ids[i]) {
-							cli.argv.devices.push(iosEnv.devices[j]);
+					for (j = 0; j < iosEnv.iOSDevices.length; j++) {
+						if (iosEnv.iOSDevices[j].id.toLowerCase() == ids[i]) {
+							cli.argv.devices.push(iosEnv.iOSDevices[j]);
 							break;
 						}
 					}
