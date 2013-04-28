@@ -13,7 +13,7 @@
  */
 
 define(
-	["Ti/_", "Ti/API", "Ti/_/analytics", "Ti/App", "Ti/_/Evented", "Ti/_/has", "Ti/_/lang", "Ti/_/ready", "Ti/_/style", "Ti/Buffer", "Ti/Platform", "Ti/UI", "Ti/Locale", "Ti/_/include"],
+	["Ti/_", "Ti/API", "Ti/_/analytics", "Ti/App", "Ti/_/Evented", "Ti/_/has", "Ti/_/lang", "Ti/_/ready", "Ti/_/style", "Ti/Buffer", "Ti/Platform", "Ti/UI", "Ti/Locale", "Ti/_/include", "Ti/MobileWeb"],
 	function(_, API, analytics, App, Evented, has, lang, ready, style, Buffer, Platform, UI) {
 
 	var global = window,

@@ -7,7 +7,7 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 	return declare("Ti.Network.HTTPClient", Evented, {
 
 		constructor: function() {
-			var xhr = this._xhr = new XMLHttpRequest;
+			var xhr = this._xhr = new XMLHttpRequest({ mozSystem: true });
 
 			this._handles = [
 				on(xhr, "error", this, "_onError"),
