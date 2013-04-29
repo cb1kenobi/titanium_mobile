@@ -17,7 +17,7 @@ define(['Ti/_/lang'], function(lang) {
 			var onerror = params.onerror;
 
 			if (apps) {
-				var inst = app.install('manifest.webapp');
+				var inst = app.install(location.href + 'manifest.webapp');
 				params.onsuccess && (inst.onsuccess = function () {
 					params.onsuccess();
 				});
