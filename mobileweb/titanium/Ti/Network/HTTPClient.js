@@ -6,23 +6,25 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 
 	return declare("Ti.Network.HTTPClient", Evented, {
 
-		constructor: function() {
+		constructor: function () {
 			var xhr = this._xhr = new XMLHttpRequest;
 
 			this._handles = [
 				on(xhr, "error", this, "_onError"),
 				xhr.upload && on(xhr.upload, "error", this, "_onError"),
-				on(xhr, "progress", this, function(evt) {
+				on(xhr, "progress", this, function (evt) {
 					evt.progress = evt.lengthComputable ? evt.loaded / evt.total : false;
 					is(this.ondatastream, "Function") && this.ondatastream.call(this, evt);
 				}),
-				xhr.upload && on(xhr.upload, "progress", this, function(evt) {
+				xhr.upload && on(xhr.upload, "progress", this, function (evt) {
 					evt.progress = evt.lengthComputable ? evt.loaded / evt.total : false;
 					is(this.onsendstream, "Function") && this.onsendstream.call(this, evt);
 				})
 			];
 
-			xhr.onreadystatechange = lang.hitch(this, function() {
+			this._requestHeaders = {};
+
+			xhr.onreadystatechange = lang.hitch(this, function () {
 				var c = this.__values__.constants,
 					f,
 					onload = this.onload;
@@ -62,7 +64,7 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 			});
 		},
 
-		destroy: function() {
+		destroy: function () {
 			if (this._xhr) {
 				this._xhr.abort();
 				this._xhr = null;
@@ -71,7 +73,7 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 			Evented.destroy.apply(this, arguments);
 		},
 
-		_onError: function(error) {
+		_onError: function (error) {
 			is(error, "Object") || (error = { message: error });
 			error.source = this;
 			error.type = "error";
@@ -80,7 +82,7 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 			is(this.onerror, "Function") && this.onerror.call(this, error);
 		},
 
-		abort: function() {
+		abort: function () {
 			clearTimeout(this._timeoutTimer);
 			this._aborted = 1;
 			this.connected && this._xhr.abort();
@@ -88,15 +90,15 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 			this._fireStateChange();
 		},
 
-		_fireStateChange: function() {
+		_fireStateChange: function () {
 			is(this.onreadystatechange, "Function") && this.onreadystatechange.call(this);
 		},
 
-		getResponseHeader: function(name) {
+		getResponseHeader: function (name) {
 			return this._xhr.readyState > 1 ? this._xhr.getResponseHeader(name) : null;
 		},
 
-		open: function(method, url, async) {
+		open: function (method, url, async) {
 			var httpURLFormatter = Ti.Network.httpURLFormatter,
 				c = this.__values__.constants,
 				wc = this.withCredentials,
@@ -116,28 +118,39 @@ define(["Ti/_", "Ti/_/declare", "Ti/_/has", "Ti/_/lang", "Ti/_/Evented", "Ti/Fil
 			wc && (this._xhr.withCredentials = wc);
 		},
 
-		send: function(args){
+		send: function (args) {
 			try {
 				var timeout = this.timeout | 0;
 				this._aborted = this._completed = 0;
 				has("ti-instrumentation") && (this._requestInstrumentationTest = instrumentation.startTest("HTTP Request"));
 				args = is(args, "Object") ? lang.urlEncode(args) : args;
-				this._contentTypeSet || args && this._xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-				this._xhr.setRequestHeader('X-Titanium-Id', App.guid);
+
+				this._requestHeaders['X-Titanium-Id'] = App.guid;
+				if (args) {
+					this._requestHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
+				}
+				alert(JSON.stringify(this._requestHeaders, null, '  '));
+				for (var name in this._requestHeaders) {
+					this._xhr.setRequestHeader(name, this._requestHeaders[name]);
+				}
 				this._xhr.send(args);
 				clearTimeout(this._timeoutTimer);
-				timeout && (this._timeoutTimer = setTimeout(lang.hitch(this, function() {
+				timeout && (this._timeoutTimer = setTimeout(lang.hitch(this, function () {
 					if (this.connected) {
 						this.abort();
 						!this._completed && this._onError("Request timed out");
 					}
 				}), timeout));
-			} catch (ex) {}
+			} catch (ex) { }
 		},
 
-		setRequestHeader: function(name, value) {
-			name === 'Content-Type' && (this._contentTypeSet = 1);
-			this._xhr.setRequestHeader(name, value);
+		setRequestHeader: function (name, value) {
+			['Content-Type'].forEach(function (header) {
+				if (name.toLowerCase() === header.toLowerCase()) {
+					name = header;
+				}
+			});
+			this._requestHeaders[name] = value;
 		},
 
 		properties: {
